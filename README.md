@@ -1,21 +1,26 @@
 # Train Ticketing System API
 
-A robust Spring Boot backend application for managing train schedules, searching for routes, and booking tickets. The system features automated overbooking prevention, simulated email notifications, and comprehensive administrator controls for managing the rail network.
+A Spring Boot backend application for managing train schedules, searching for routes, and booking tickets. The system features automated overbooking prevention, simulated email notifications, and comprehensive administrator controls for managing the rail network.
 
-## 🚀 Key Features
+## 🚀 Key Features & Implementation Details
 
-* **Advanced Route Search:** Finds valid connections between stations (handles both direct routes and changeovers).
-* **Smart Booking System:** Prevents overbooking by dynamically checking available capacity before saving reservations.
-* **Email Notifications:** Simulates email confirmations for successful bookings and alerts passengers automatically if their train is delayed.
+* **🔍 Advanced Route Search:** Finds valid connections between stations, including direct routes and complex multi-train changeovers.
+  * *Implementation:* Logic located in `RouteService.java` using a graph-traversal approach.
+* **🎟️ Smart Booking System:** Prevents overbooking by dynamically checking available capacity in real-time before saving reservations.
+  * *Implementation:* Capacity validation logic found in `BookingService.java`.
+* **📧 Email Notifications:** Simulates email confirmations and delay alerts.
+  * *Implementation:* Managed by `EmailService.java`, triggered by actions in `BookingService.java` and `TrainService.java`.
 * **Admin Dashboard API:** Full CRUD operations for trains, routes, and stations, plus delay management and passenger manifests.
-* **Custom Role-Based Security:** Protects admin endpoints using a custom interceptor requiring an `X-User-Id` header for users with the `ADMIN` role.
+  * *Implementation:* See `StationService.java`, `TrainService.java` and RouteService.java`.
+* **🛡️ Role-Based Security:** Protects admin endpoints via a custom interceptor.
+  * *Implementation:* See `AuthInterceptor.java` and `WebConfig.java`.
 
 ## 🛠 Tech Stack
 
 * **Framework:** Spring Boot 3.1.5 (Java 17)
 * **Build Tool:** Gradle (Groovy DSL)
 * **Data Access:** Spring Data JPA / Hibernate
-* **Database:** MySQL (Production) / H2 (Testing)
+* **Database:** MySQL
 * **Tooling:** MapStruct (for DTO mapping), Lombok
 
 ---
@@ -26,11 +31,11 @@ The application uses a relational database model designed to handle complex rout
 
 | Table | Description | Key Columns |
 | :--- | :--- | :--- |
-| **`users`** | Application users (customers and admins). | [cite_start]`id`, `name`, `email`, `password`, `role`  |
-| **`stations`** | Physical train stations. | [cite_start]`id`, `name`, `city` |
-| **`routes`** | A named corridor (e.g. "Budapest - Debrecen"). | [cite_start]`id`, `name`, `description` |
+| **`users`** | Application users (customers and admins). | `id`, `name`, `email`, `password`, `role`  |
+| **`stations`** | Physical train stations. | `id`, `name`, `city` |
+| **`routes`** | A named corridor (e.g. "Budapest - Debrecen"). | `id`, `name`, `description` |
 | **`route_stations`** | Junction table tracking the order of stations on a route and the travel time. |`id`, `route_id`, `station_id`, `stopOrder`, `minutesFromOrigin`  |
-| **`trains`** | A physical train assigned to a route. | [cite_start]`id`, `trainNumber`, `route_id`, `departureTime`, `totalSeats`, `delayMinutes`  |
+| **`trains`** | A physical train assigned to a route. | `id`, `trainNumber`, `route_id`, `departureTime`, `totalSeats`, `delayMinutes`  |
 | **`bookings`** | Ticket reservations linking a user to a train segment. |`id`, `user_id`, `train_id`, `from_station_id`, `to_station_id`, `numberOfSeats`, `status` |
 
 ---
@@ -191,11 +196,15 @@ View all bookings made for a specific train to track occupancy and passenger det
 ```
 
 ---
-Email send
+### ✅ Booking Confirmation Email Example
 
 <img width="1525" height="642" alt="image" src="https://github.com/user-attachments/assets/650ff052-5f23-47b4-9cef-c086d05ed985" />
 <img width="718" height="926" alt="image" src="https://github.com/user-attachments/assets/d55cadea-1690-41dc-88d9-ba8057f40bbe" />
 
+### ⚠️ Train Delay Alert Notification
+
+<img width="1497" height="581" alt="image" src="https://github.com/user-attachments/assets/f175dd16-8eba-4a66-aebf-1adb3cb4d71b" />
+<img width="757" height="613" alt="image" src="https://github.com/user-attachments/assets/b45e01fa-f1d6-4941-90bf-9b0149d9614c" />
 
 ---
 
@@ -204,7 +213,7 @@ Email send
 
 1. **Clone the repository:**
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/JakabGergo/train-ticketing.git
 
 ```
 
@@ -225,7 +234,27 @@ git clone <your-repo-url>
 
 4. **Test with Postman:** Remember to include the `X-User-Id` header for all requests under the `/api/admin/` path to simulate admin authentication.
 
-```
 
-```
+---
 
+## 🛠️ Future Improvements & Roadmap
+
+While the core logic of the system is fully functional, the following features are planned for future releases to make the system production-ready and scalable:
+
+### 🔐 1. Secure User Management
+* **User Registration Endpoint:** Implementation of a public API for new users to create accounts.
+* **Password Hashing:** Integration of **BCrypt** (Spring Security) to ensure that user passwords are never stored in plain text, protecting against data breaches.
+* **JWT Authentication:** Moving away from header-based IDs to a stateless **JSON Web Token** system for improved security.
+
+### 📊 2. API Scalability & Pagination
+* **Resource Pagination:** Currently, the system returns all records at once. Future updates will implement `Pageable` in Spring Data JPA for endpoints like `GET /api/admin/trains` and `GET /api/admin/routes`.
+* **Efficient Loading:** This ensures the application remains fast and responsive even as the database grows to thousands of trains and bookings.
+
+### 🚆 3. Advanced Vehicle & Train Modeling
+* **Vehicle Inventory:** Expanding the `trains` table to link with a `vehicles` or `carriages` table. This will allow the system to:
+    * Store specific data for each wagon (e.g., Year of manufacture, Model, Maintenance history).
+    * Define seat maps per vehicle (Window vs. Aisle seats).
+    * Distinguish between different vehicle types (First Class, Economy, Dining Car, Sleeper).
+* **Dynamic Capacity:** Automatically calculating a train's `total_seats` based on the sum of the seats in its attached vehicles.
+
+---
