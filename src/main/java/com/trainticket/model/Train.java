@@ -1,5 +1,6 @@
 package com.trainticket.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.stereotype.Component;
@@ -15,13 +16,14 @@ import java.time.LocalTime;
 @Table(name = "trains")
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
+@Builder
 public class Train extends BaseEntity {
 
     @Column(nullable = false, unique = true)
     private String trainNumber;
 
     @Column(nullable = false)
-    private LocalDateTime departureTime;
+    private LocalTime departureTime;
 
     @Column(nullable = false)
     private int totalSeats;
@@ -31,5 +33,6 @@ public class Train extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "route_id", nullable = false)
+    @JsonBackReference("route-routestation")
     private Route route;
 }
