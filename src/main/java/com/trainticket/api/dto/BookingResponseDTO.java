@@ -9,12 +9,13 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class BookingResponseDTO {
     private Long id;
     private String userName;      // Must match Mapper source "user.name"
+    private String userEmail;
     private String trainName;     // Must match Mapper target
     private String fromStationName;
     private String toStationName;

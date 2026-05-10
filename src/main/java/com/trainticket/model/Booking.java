@@ -1,5 +1,6 @@
 package com.trainticket.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.stereotype.Component;
@@ -18,10 +19,12 @@ public class Booking extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties("bookings")
     private User user;
 
     @ManyToOne
     @JoinColumn(name = "train_id", nullable = false)
+    @JsonIgnoreProperties("route")
     private Train train;
 
     @ManyToOne
