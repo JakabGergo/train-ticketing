@@ -30,7 +30,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 
     implementation 'org.springframework.boot:spring-boot-starter-mail'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
+    //implementation 'org.springframework.boot:spring-boot-starter-security'
 
     implementation 'com.zaxxer:HikariCP:6.0.0'
     implementation 'org.springframework.boot:spring-boot-starter-mail:4.1.0-M4'
