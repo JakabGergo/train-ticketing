@@ -1,10 +1,15 @@
 package com.trainticket.service;
 
 import com.trainticket.api.dto.JourneyLegDTO;
+import com.trainticket.api.dto.RouteCreateDTO;
 import com.trainticket.api.dto.SearchResponseDTO;
+import com.trainticket.model.Route;
 import com.trainticket.model.RouteStation;
+import com.trainticket.model.Station;
 import com.trainticket.model.Train;
+import com.trainticket.repository.RouteRepository;
 import com.trainticket.repository.RouteStationRepository;
+import com.trainticket.repository.StationRepository;
 import com.trainticket.repository.TrainRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +24,8 @@ import java.util.NoSuchElementException;
 public class RouteService {
     private final TrainRepository trainRepository;
     private final RouteStationRepository routeStationRepository;
+    private final RouteRepository routeRepository;
+    private final StationRepository stationRepository;
 
     public List<SearchResponseDTO> findPossibleRoutes(Long fromId, Long toId) {
         List<SearchResponseDTO> results = new ArrayList<>();
@@ -104,5 +111,64 @@ public class RouteService {
                 .departureTime(LocalDateTime.from(t.getDepartureTime().plusMinutes(s.getMinutesFromOrigin())))
                 .arrivalTime(LocalDateTime.from(t.getDepartureTime().plusMinutes(e.getMinutesFromOrigin())))
                 .build();
+    }
+
+    public Route createRoute(RouteCreateDTO dto) {
+        Route route = Route.builder()
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .build();
+        route = routeRepository.save(route);
+
+        for (RouteCreateDTO.RouteStationDTO stationDTO : dto.getStations()) {
+            Station station = stationRepository.findById(stationDTO.getStationId())
+                    .orElseThrow(() -> new RuntimeException("Station not found"));
+
+            RouteStation rs = RouteStation.builder()
+                    .route(route)
+                    .station(station)
+                    .stopOrder(stationDTO.getStopOrder())
+                    .minutesFromOrigin(stationDTO.getMinutesFromOrigin())
+                    .build();
+            routeStationRepository.save(rs);
+        }
+
+        return route;
+    }
+
+    public Route updateRoute(Long id, RouteCreateDTO dto) {
+        Route route = routeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Route not found"));
+
+        route.setName(dto.getName());
+        route.setDescription(dto.getDescription());
+
+        // Delete old route stations
+        routeStationRepository.deleteAll(
+                routeStationRepository.findAllByRouteIdOrderByStopOrderAsc(id));
+
+        // Add new ones
+        for (RouteCreateDTO.RouteStationDTO stationDTO : dto.getStations()) {
+            Station station = stationRepository.findById(stationDTO.getStationId())
+                    .orElseThrow(() -> new RuntimeException("Station not found"));
+
+            RouteStation rs = RouteStation.builder()
+                    .route(route)
+                    .station(station)
+                    .stopOrder(stationDTO.getStopOrder())
+                    .minutesFromOrigin(stationDTO.getMinutesFromOrigin())
+                    .build();
+            routeStationRepository.save(rs);
+        }
+
+        return routeRepository.save(route);
+    }
+
+    public void deleteRoute(Long id) {
+        routeRepository.deleteById(id);
+    }
+
+    public List<Route> getAllRoutes() {
+        return routeRepository.findAll();
     }
 }

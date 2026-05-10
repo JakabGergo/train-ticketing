@@ -1,6 +1,7 @@
 package com.trainticket.model;
 
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,7 @@ import java.util.List;
 @Component
 @EqualsAndHashCode(callSuper = true)
 @Table(name = "routes")
+@Builder
 public class Route extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String name;
@@ -23,5 +25,6 @@ public class Route extends BaseEntity {
 
     @OneToMany(mappedBy = "route", cascade = CascadeType.ALL)
     @OrderBy("stopOrder ASC")
+    @JsonManagedReference("route-routestation")
     private List<RouteStation> routeStations;
 }
