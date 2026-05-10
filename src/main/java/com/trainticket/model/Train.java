@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
@@ -20,7 +21,7 @@ public class Train extends BaseEntity {
     private String trainNumber;
 
     @Column(nullable = false)
-    private LocalTime departureTime;
+    private LocalDateTime departureTime;
 
     @Column(nullable = false)
     private int totalSeats;
