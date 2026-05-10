@@ -1,14 +1,11 @@
 package com.trainticket.service;
 
-import com.trainticket.model.Booking;
-import com.trainticket.model.Station;
-import com.trainticket.model.Train;
-import com.trainticket.model.User;
-import com.trainticket.repository.BookingRepository;
-import com.trainticket.repository.RouteStationRepository;
-import com.trainticket.repository.TrainRepository;
+import com.trainticket.model.*;
+import com.trainticket.repository.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -17,28 +14,44 @@ public class BookingService {
     private final TrainRepository trainRepository;
     private final RouteStationRepository routeStationRepository;
 
+    private final StationRepository stationRepository;
+    private final UserRepository userRepository;
     private final EmailService emailService;
 
-    public BookingService(BookingRepository bookingRepository, TrainRepository trainRepository, RouteStationRepository routeStationRepository, EmailService emailService) {
+    public BookingService(BookingRepository bookingRepository, TrainRepository trainRepository, RouteStationRepository routeStationRepository, StationRepository stationRepository, UserRepository userRepository, EmailService emailService) {
         this.bookingRepository = bookingRepository;
         this.trainRepository = trainRepository;
         this.routeStationRepository = routeStationRepository;
+        this.stationRepository = stationRepository;
+        this.userRepository = userRepository;
         this.emailService = emailService;
     }
 
-    public Booking bookingTickets(User user, Long trainId, Station fromStation, Station toStation, int numberOfSeats) {
+    public List<Booking> findAll() {
+        return bookingRepository.findAll();
+    }
+
+    @Transactional
+    public Booking bookingTickets(Long userId, Long trainId, Long fromStationId, Long toStationId, int numberOfSeats) {
+        // Fetch entities by ID inside the service
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
         Train train = trainRepository.findById(trainId)
                 .orElseThrow(() -> new IllegalArgumentException("Train not found"));
+        Station fromStation = stationRepository.findById(fromStationId)
+                .orElseThrow(() -> new IllegalArgumentException("Start station not found"));
+        Station toStation = stationRepository.findById(toStationId)
+                .orElseThrow(() -> new IllegalArgumentException("End station not found"));
 
         // 1. Get the stop orders for the requested segment
         int startOrder = getStopOrder(train.getRoute().getId(), fromStation.getId());
         int endOrder = getStopOrder(train.getRoute().getId(), toStation.getId());
 
         if (startOrder >= endOrder) {
-            throw new IllegalArgumentException("Invalid route segment selected.");
+            throw new IllegalArgumentException("Invalid route segment: Destination must be after origin.");
         }
 
-        // 2. Prevent overbooking by checking segment availability
+        // 2. Prevent overbooking
         validateSeatAvailability(train, startOrder, endOrder, numberOfSeats);
 
         // 3. Create and save the booking
@@ -48,10 +61,12 @@ public class BookingService {
         booking.setFromStation(fromStation);
         booking.setToStation(toStation);
         booking.setNumberOfSeats(numberOfSeats);
+        booking.setStatus(BookingStatus.CONFIRMED); // Set default status
+        booking.setCreatedAt(LocalDateTime.now()); // Set timestamp
 
         Booking savedBooking = bookingRepository.save(booking);
 
-        // 4. Send Confirmation Email
+        // 4. Send Confirmation Email (mocked log)
         emailService.sendBookingConfirmation(user.getEmail(), savedBooking);
 
         return savedBooking;
