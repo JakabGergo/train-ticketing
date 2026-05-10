@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
+@Builder
 public class Station extends BaseEntity {
 
     @Column(nullable = false, unique = true)
