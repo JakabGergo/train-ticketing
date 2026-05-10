@@ -1,11 +1,11 @@
 package com.trainticket.model;
 
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Entity
 @Data
@@ -15,11 +15,13 @@ import org.springframework.stereotype.Component;
 @Component
 @EqualsAndHashCode(callSuper = true)
 @Table(name = "routes")
-public class Route extends BaseEntity{
+public class Route extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String name;
 
     private String description;
 
-    // TODO connection to stations
+    @OneToMany(mappedBy = "route", cascade = CascadeType.ALL)
+    @OrderBy("stopOrder ASC")
+    private List<RouteStation> routeStations;
 }
