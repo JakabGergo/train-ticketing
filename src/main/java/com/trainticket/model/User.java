@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Entity
 @Table(name = "users")
 @Data
@@ -26,5 +28,6 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private Role role;
 
-    // TODO Connection with bookings
+    @OneToMany(mappedBy = "user")
+    private List<Booking> bookings;
 }
