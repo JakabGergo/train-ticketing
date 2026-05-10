@@ -13,7 +13,6 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final TrainRepository trainRepository;
     private final RouteStationRepository routeStationRepository;
-
     private final StationRepository stationRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;

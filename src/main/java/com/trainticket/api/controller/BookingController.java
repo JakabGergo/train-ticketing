@@ -27,7 +27,6 @@ public class BookingController {
      */
     @PostMapping
     public ResponseEntity<BookingResponseDTO> createBooking(@RequestBody BookingRequestDTO request) {
-
         Booking booking = bookingService.bookingTickets(
                 request.getUserId(),
                 request.getTrainId(),
